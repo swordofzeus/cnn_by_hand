@@ -72,39 +72,40 @@ class Conv2D:
         #       2) You may implement the convolution with loops                     #
         #############################################################################
 
-        def compute_output_dimensions(x, padding, window, stride):
-            return int(1 + (H + 2 * padding - window) / stride)
-        N, C, H, W = x.shape
-        pad = self.padding
-
-        F, _, HH, WW = self.weight.shape
+        def compute_output_dimensions(input_dim, padding, window, stride):
+            return 1 + (input_dim + 2 * padding - window) // stride
+        N = x.shape[0]
         output_height = compute_output_dimensions(
-            x, self.padding, HH, self.stride)
+            x.shape[2], self.padding, self.kernel_size, self.stride)
         output_width = compute_output_dimensions(
-            x, self.padding, WW, self.stride)
+            x.shape[3], self.padding, self.kernel_size, self.stride)
 
-        out = np.zeros((N, F, output_height, output_width))
-        x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)))
+        out = np.zeros((N, self.out_channels, output_height, output_width))
+        padded_x = np.pad(
+            x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)))
 
-        def compute_convolution(curr,i,out):
-            for weight_index,weight in enumerate(self.weight):
+        def compute_convolution(curr, i, out):
+            for weight_index, weight in enumerate(self.weight):
                 '''Iterate from 0 to the padded shape - filter height, in intervals of our stride variable '''
-                for curr_x_position in range(0, x_pad.shape[2]+1-self.kernel_size, self.stride):
-                    out_y = curr_x_position - self.stride
+                out_x = 0
+                for curr_x_position in range(0, padded_x.shape[2]+1-self.kernel_size, self.stride):
                     '''Iterate from 0 to the padded shape - filter width, in intervals of our stride variable '''
-                    for curr_y_position in range(0, x_pad.shape[2]+1-self.kernel_size, self.stride):
+                    out_y = 0
+                    for curr_y_position in range(0, padded_x.shape[2]+1-self.kernel_size, self.stride):
                         '''take a slice of current data, everything along first dimension, and only x<x+filter size &&
                             y < y+ filter size '''
-                        window_slice = curr[:, curr_x_position:(curr_x_position + self.kernel_size), curr_y_position:(curr_y_position + self.kernel_size)]
+                        window_slice = curr[:, curr_x_position:(
+                            curr_x_position + self.kernel_size), curr_y_position:(curr_y_position + self.kernel_size)]
                         '''multiply and sum weights in our slice, computing the convolution scalar
                             for that particular index. update the output variable'''
-                        out[i, weight_index, int(curr_x_position/self.stride),
-                            int(curr_y_position/self.stride)] = np.sum(np.multiply(weight, window_slice)) + self.bias[weight_index]
+                        out[i, weight_index, out_x,
+                            out_y] = np.sum(np.multiply(weight, window_slice)) + self.bias[weight_index]
+                        out_y = out_y+1
+                    out_x = out_x + 1
 
-        for i, value in enumerate(x_pad):
-            compute_convolution(x_pad[i],i,out)
+        for i, value in enumerate(padded_x):
+            compute_convolution(padded_x[i], i, out)
             #np.apply_along_axis(compute_convolution, 0, b)
-
 
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -134,23 +135,31 @@ class Conv2D:
         # init
         dx = np.zeros((N, C, H, W))
         dw = np.zeros((F, C, HH, WW))
-        db = dout.sum(0).sum(1).sum(1)
+        #sum across all inputs, then width + height. final output is separated by channel
+        db = dout.sum(0).sum((1,2))
+
         x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)),
                        mode='constant', constant_values=(0))  # add padding to x
         dx_pad = np.zeros(x_pad.shape)
 
-        # backward pass
-        for i in range(N):
-            for j in range(F):
-                for q in range(0, 1 + H + 2 * pad - HH, stride):
-                    for p in range(0, 1 + W + 2 * pad - WW, stride):
-                        w_tmp = w[j, :, :, :]
-                        x_tmp = x_pad[i, :, q:(q + HH), p:(p + WW)]
-                        dw[j, :, :, :] += x_tmp * \
-                            dout[i, j, int(q/stride), int(p/stride)]
-                        dx_pad[i, :, q:(q + HH), p:(p + WW)] += w_tmp * \
-                            dout[i, j, int(q/stride), int(p/stride)]
 
+        def compute_backward_pass(i,x_pad):
+            for weight_index, weight in enumerate(self.weight):
+                out_x = 0
+                for q in range(0, x_pad.shape[2] + 1 - self.kernel_size, stride):
+                    out_y = 0
+                    for p in range(0, x_pad.shape[2] + 1 - self.kernel_size, stride):
+
+                        x_tmp = x_pad[:, q:(q + HH), p:(p + WW)]
+                        dw[weight_index] += x_tmp * \
+                            dout[i, weight_index, out_x, out_y]
+                        dx_pad[i, :, q:(q + HH), p:(p + WW)] += weight * \
+                            dout[i, weight_index, out_x, out_y]
+                        out_y += 1
+                    out_x += 1
+
+        for i,value in enumerate(x_pad):
+            compute_backward_pass(i,value)
         dx = dx_pad[:, :, pad:(pad + H), pad:(pad + W)]
         self.dx = dx
         self.dw = dw

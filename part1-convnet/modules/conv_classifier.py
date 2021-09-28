@@ -76,7 +76,11 @@ class ConvNet:
         # TODO:                                                                     #
         #    1) Implement forward pass of the model                                 #
         #############################################################################
+        out = x
+        for module in self.modules:
+            out = module.forward(out)
 
+        probs,loss = self.criterion.forward(out,y)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
@@ -91,6 +95,15 @@ class ConvNet:
         # TODO:                                                                     #
         #    1) Implement backward pass of the model                                #
         #############################################################################
+        for index,module in enumerate(reversed(self.modules)):
+            dout = None
+            if(index == 0):
+                self.criterion.backward()
+                dout = self.criterion.dx
+            else:
+                dout = module[index+1].dx
+            module.backward(dout)
+
 
         #############################################################################
         #                              END OF YOUR CODE                             #

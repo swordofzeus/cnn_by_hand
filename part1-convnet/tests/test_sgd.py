@@ -41,6 +41,7 @@ class TestSGD(unittest.TestCase):
 
         optimizer = SGD(model)
 
+
         # forward once
         np.random.seed(1024)
         x = np.random.randn(32, 128)
@@ -48,6 +49,8 @@ class TestSGD(unittest.TestCase):
         y = np.random.randint(10, size=32)
         tmp = model.forward(x, y)
         model.backward()
+        print(type(model.modules[-1]).__name__)
+        print(model.modules[-1].dw)
         optimizer.update(model)
         # forward twice
         np.random.seed(512)
