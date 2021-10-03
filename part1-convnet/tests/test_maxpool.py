@@ -59,14 +59,14 @@ class TestConv(unittest.TestCase):
         diff = rel_error(out, correct_out)
         self.assertAlmostEquals(diff, 0, places=7)
 
-    # def test_backward(self):
-    #     x = np.random.randn(3, 2, 8, 8)
-    #     dout = np.random.randn(3, 2, 4, 4)
+    def test_backward(self):
+        x = np.random.randn(3, 2, 8, 8)
+        dout = np.random.randn(3, 2, 4, 4)
 
-    #     dx_num = eval_numerical_gradient_array(lambda x: self._pool_forward(x), x, dout)
-    #     pool = MaxPooling(kernel_size=2, stride=2)
-    #     out = pool.forward(x)
-    #     pool.backward(dout)
-    #     dx = pool.dx
+        dx_num = eval_numerical_gradient_array(lambda x: self._pool_forward(x), x, dout)
+        pool = MaxPooling(kernel_size=2, stride=2)
+        out = pool.forward(x)
+        pool.backward(dout)
+        dx = pool.dx
 
-    #     self.assertAlmostEquals(rel_error(dx, dx_num), 0, places=8)
+        self.assertAlmostEquals(rel_error(dx, dx_num), 0, places=8)

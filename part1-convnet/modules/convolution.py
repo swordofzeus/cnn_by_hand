@@ -126,44 +126,42 @@ class Conv2D:
         #       1) You may implement the convolution with loops                     #
         #       2) don't forget padding when computing dx                           #
         #############################################################################
-        x, w, b = self.cache, self.weight, self.bias
-        N, C, H, W = x.shape
-        F, _, HH, WW = self.weight.shape
-        stride = self.stride
-        pad = self.padding
-
-        # init
-        dx = np.zeros((N, C, H, W))
-        dw = np.zeros((F, C, HH, WW))
-        #sum across all inputs, then width + height. final output is separated by channel
-        db = dout.sum(0).sum((1,2))
-
-        x_pad = np.pad(x, ((0, 0), (0, 0), (pad, pad), (pad, pad)),
-                       mode='constant', constant_values=(0))  # add padding to x
-        dx_pad = np.zeros(x_pad.shape)
+        x = self.cache
+        out_dim_x = self.padding+x.shape[2]
+        out_dim_y = self.padding+x.shape[3]
+        dw = np.zeros((self.weight.shape[0], x.shape[1], self.kernel_size, self.kernel_size))
+        pad_x = np.pad(x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)))  # add padding to x
+        dx = np.zeros(pad_x.shape)
 
 
-        def compute_backward_pass(i,x_pad):
+        def compute_backward_pass(i,curr):
             for weight_index, weight in enumerate(self.weight):
+                '''Iterate across all weights '''
                 out_x = 0
-                for q in range(0, x_pad.shape[2] + 1 - self.kernel_size, stride):
+                for curr_x_pos in range(0, curr.shape[2] + 1 - self.kernel_size, self.stride):
+                    '''Iterate from 0 to the padded shape - filter height, in intervals of our stride variable '''
                     out_y = 0
-                    for p in range(0, x_pad.shape[2] + 1 - self.kernel_size, stride):
-
-                        x_tmp = x_pad[:, q:(q + HH), p:(p + WW)]
-                        dw[weight_index] += x_tmp * \
+                    for curr_y_pos in range(0, curr.shape[2] + 1 - self.kernel_size, self.stride):
+                        '''update padded dx vector with respect to i (the index of the current image we are looking at)'''
+                        dx[i, :, curr_x_pos:(curr_x_pos + self.kernel_size), curr_y_pos:(curr_y_pos + self.kernel_size)] += weight * \
                             dout[i, weight_index, out_x, out_y]
-                        dx_pad[i, :, q:(q + HH), p:(p + WW)] += weight * \
+                        '''take a slice of current data, everything along first dimension, and only x<x+filter size &&
+                            y < y+ filter size '''
+                        window_slice = curr[:, curr_x_pos:(curr_x_pos + self.kernel_size), curr_y_pos:(curr_y_pos + self.kernel_size)]
+                        '''update current weight vector by adding slice to dout of curr slice'''
+                        dw[weight_index] += window_slice * \
                             dout[i, weight_index, out_x, out_y]
                         out_y += 1
                     out_x += 1
 
-        for i,value in enumerate(x_pad):
+        for i,value in enumerate(pad_x):
+            '''Compute backward pass for each image in batch'''
             compute_backward_pass(i,value)
-        dx = dx_pad[:, :, pad:(pad + H), pad:(pad + W)]
-        self.dx = dx
         self.dw = dw
-        self.db = db
+        '''resize dx so it removes extra padding dimensions. if 0, it does nothing'''
+        self.dx = dx[:, :, self.padding:out_dim_x, self.padding:out_dim_y]
+        '''sum across all inputs, then width + height. final output is separated by channel'''
+        self.db = dout.sum(0).sum((1,2))
 
         #############################################################################
         #                              END OF YOUR CODE                             #

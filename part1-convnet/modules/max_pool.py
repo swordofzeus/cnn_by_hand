@@ -46,14 +46,26 @@ class MaxPooling:
         # Hint:                                                                     #
         #       1) You may implement the process with loops                         #
         #############################################################################
-        N, C, H, W = x.shape
-        pool_height, pool_width, stride = self.kernel_size,self.kernel_size,self.stride
-        out = np.zeros((N, C, int(H/stride), int(W/stride)))
-        for i in range(N):
-            for j in range(C):
-                for q in range(0, H - pool_height + 1, stride):
-                    for p in range(0, W - pool_width + 1, stride):
-                        out[i, j, int(q/stride), int(p/stride)] = np.max(x[i, j, q:(q+pool_height), p:(p+pool_width)])
+        out = np.zeros((x.shape[0], x.shape[1], x.shape[2]//self.stride, x.shape[3]//self.stride))
+        def max_pool(i,val):
+            for channel in range(x.shape[1]):
+                '''Iterate over all channels in image'''
+                out_x =0
+                '''Iterate for all x values between 0 and width - stride'''
+                for curr_x_pos in range(0, x.shape[2] + 1 - self.kernel_size , self.stride):
+                    out_y = 0
+                    '''Iterate for all y values between 0 and height - stride'''
+                    for curr_y_pos in range(0, x.shape[3] + 1 - self.kernel_size, self.stride):
+                        '''Get current slice using kernal'''
+                        window_slice = val[channel, curr_x_pos:(curr_x_pos+self.kernel_size), curr_y_pos:(curr_y_pos+self.kernel_size)]
+                        '''Take max over slice, and add value to output array'''
+                        out[i, channel, out_x, out_y] = np.max(window_slice)
+                        out_y+=1
+                    out_x+=1
+
+        for i,val in enumerate(x):
+            max_pool(i,val)
+
         H_out = None
         W_out = None
         #############################################################################
@@ -75,7 +87,18 @@ class MaxPooling:
         #       1) You may implement the process with loops                     #
         #       2) You may find np.unravel_index useful                             #
         #############################################################################
+        pool_height, pool_width, stride = self.kernel_size, self.kernel_size, self.stride
+        N, C, H, W = x.shape
+        self.dx = np.zeros(x.shape)
 
+        for i in range(N):
+            for j in range(C):
+                for curr_x_pos in range(0, H - pool_height + 1, stride):
+                    for p in range(0, W - pool_width + 1, stride):
+                        x_tmp = x[i, j, curr_x_pos:(curr_x_pos+pool_height), p:(p+pool_width)]
+                        max_idx = np.argmax(x_tmp)
+                        idx_h, idx_w = np.unravel_index(max_idx, (pool_height, pool_width))
+                        self.dx[i, j, curr_x_pos+idx_h, p+idx_w] = dout[i, j, np.int(curr_x_pos/stride), np.int(p/stride)]
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

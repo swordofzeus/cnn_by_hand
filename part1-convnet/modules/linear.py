@@ -61,7 +61,9 @@ class Linear:
         # s = x[1:].flatten()
         # print(s.shape)
         # out = np.dot(s,self.weight) + self.bias
-        out = x.reshape([x.shape[0], -1]).dot(self.weight) + self.bias
+        flattened = x.reshape([len(x), -1])
+        #y= mx + b
+        out = np.dot(flattened,self.weight) + self.bias
         #print(out.shape)
         #exit()
         #############################################################################
@@ -79,13 +81,15 @@ class Linear:
         x = self.cache
         #############################################################################
         # TODO: Implement the linear backward pass.                                 #
-        #############################################################################
-        x, w, b = self.cache, self.weight,self.bias
-        dx, dw, db = None, None, None
-        self.db = dout.sum(axis=0)
-        self.dw = x.reshape([x.shape[0], -1]).T.dot(dout)
-        self.dx = dout.dot(w.T).reshape(x.shape)
-
+        #############################################################################,
+        self.db = np.sum(dout,axis=0)
+        #print(self.dx.shape)
+        #exit()
+        self.dx = np.reshape(np.dot(dout,self.weight.T),x.shape)
+        # y=mx+b -> d/dy -> dy/dx -? d/dx(mx + b) -> m
+        flattened = x.reshape((len(x), -1))
+        y = np.dot(flattened.T,dout)
+        self.dw = y
 
         #############################################################################
         #                              END OF YOUR CODE                             #
