@@ -42,8 +42,8 @@ class SGD(_BaseOptimizer):
                 # TODO:                                                                     #
                 #    1) Momentum updates for weights                                        #
                 #############################################################################
-                self.grad_tracker[idx]['dw'] = self.momentum * self.grad_tracker[idx]['dw'] - self.learning_rate * m.dw
-                dx = self.grad_tracker[idx]['dw']
+                dx = self.momentum * self.grad_tracker[idx]['dw'] - self.learning_rate * m.dw
+                self.grad_tracker[idx]['dw'] = dx
                 m.weight += dx
                 #############################################################################
                 #                              END OF YOUR CODE                             #
@@ -53,8 +53,8 @@ class SGD(_BaseOptimizer):
                 # TODO:                                                                     #
                 #    1) Momentum updates for bias                                           #
                 #############################################################################
-                self.grad_tracker[idx]['db'] = self.momentum * self.grad_tracker[idx]['db'] - self.learning_rate * m.db
-                db = self.grad_tracker[idx]['db']
+                db = self.momentum * self.grad_tracker[idx]['db'] - self.learning_rate * m.db
+                self.grad_tracker[idx]['db'] = db
                 m.bias += db
 
                 #############################################################################

@@ -35,6 +35,9 @@ class TwoLayerNet(nn.Module):
         #############################################################################
         # TODO: Initialize the TwoLayerNet, use sigmoid activation between layers   #
         #############################################################################
+        self.l1 = nn.Linear(input_dim, hidden_size)
+        self.sigmoid_layer = nn.Sigmoid()
+        self.l2 = nn.Linear(hidden_size,hidden_size)
 
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -45,7 +48,10 @@ class TwoLayerNet(nn.Module):
         #############################################################################
         # TODO: Implement forward pass of the network                               #
         #############################################################################
-
+        x = torch.flatten(x, start_dim=1)
+        out = self.l1(x)
+        out = self.sigmoid_layer(out)
+        out = self.l2(out)
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################

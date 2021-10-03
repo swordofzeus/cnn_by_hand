@@ -92,6 +92,13 @@ def train(epoch, data_loader, model, optimizer, criterion):
         #       2. Compute batch loss                                               #
         #       3. Compute gradients and update model parameters                    #
         #############################################################################
+        optimizer.zero_grad()
+        out = model.forward(data)
+        loss = criterion(out, target)
+
+        loss.backward()
+        optimizer.step()
+
 
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -129,6 +136,10 @@ def validate(epoch, val_loader, model, criterion):
         # TODO: Complete the body of training loop                                  #
         #       HINT: torch.no_grad()                                               #
         #############################################################################
+        with torch.no_grad():
+            out = model.forward(data)
+            loss = criterion(out, target)
+
 
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -200,7 +211,7 @@ def main():
             root='./data', train=True, download=True, transform=transform_train)
     else:
         train_dataset = IMBALANCECIFAR10(root='../part1-convnet/data',
-                                         transform=transform_train,
+                                         transform=transform_train
                                          )
         cls_num_list = train_dataset.get_cls_num_list()
         if args.reweight:

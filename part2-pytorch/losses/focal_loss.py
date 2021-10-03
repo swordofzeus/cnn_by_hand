@@ -37,6 +37,15 @@ def reweight(cls_num_list, beta=0.9999):
     #############################################################################
     # TODO: reweight each class by effective numbers                            #
     #############################################################################
+    #r (1 − β)/(1 − βni )
+    print(cls_num_list)
+    def compute_effective_number_samples(x):
+        return (1-beta)/(1-beta**x)
+    per_cls_weights = list(map(compute_effective_number_samples,cls_num_list ))
+    print(cls_num_list)
+    per_cls_weights = torch.FloatTensor(per_cls_weights)
+
+
 
     #############################################################################
     #                              END OF YOUR CODE                             #
@@ -62,6 +71,14 @@ class FocalLoss(nn.Module):
         #############################################################################
         # TODO: Implement forward pass of the focal loss                            #
         #############################################################################
+        log_prob = F.log_softmax(input, dim=-1)
+        prob = torch.exp(log_prob)
+        fc = F.nll_loss(
+            ((1 - prob) ** self.gamma) * log_prob,
+            target,
+            weight=self.weight,
+        )
+        return fc
 
         #############################################################################
         #                              END OF YOUR CODE                             #
