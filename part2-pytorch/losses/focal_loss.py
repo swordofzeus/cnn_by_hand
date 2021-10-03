@@ -71,15 +71,15 @@ class FocalLoss(nn.Module):
         #############################################################################
         # TODO: Implement forward pass of the focal loss                            #
         #############################################################################
-        log_prob = F.log_softmax(input, dim=-1)
-        prob = torch.exp(log_prob)
-        fc = F.nll_loss(
-            ((1 - prob) ** self.gamma) * log_prob,
+        log_softmax = F.log_softmax(input, dim=-1)
+        logit_prob = torch.exp(log_softmax)
+        p = (1-logit_prob)**self.gamma
+        '''compute negative log loss b/w target and reweighted weights'''
+        loss = F.nll_loss(
+            p*log_softmax,
             target,
             weight=self.weight,
         )
-        return fc
-
         #############################################################################
         #                              END OF YOUR CODE                             #
         #############################################################################
