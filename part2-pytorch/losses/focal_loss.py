@@ -37,12 +37,10 @@ def reweight(cls_num_list, beta=0.9999):
     #############################################################################
     # TODO: reweight each class by effective numbers                            #
     #############################################################################
-    #r (1 − β)/(1 − βni )
-    print(cls_num_list)
+    #fprmula: (1 − β)/(1 − βni )
     def compute_effective_number_samples(x):
         return (1-beta)/(1-beta**x)
     per_cls_weights = list(map(compute_effective_number_samples,cls_num_list ))
-    print(cls_num_list)
     per_cls_weights = torch.FloatTensor(per_cls_weights)
 
 
@@ -73,10 +71,10 @@ class FocalLoss(nn.Module):
         #############################################################################
         log_softmax = F.log_softmax(input, dim=-1)
         logit_prob = torch.exp(log_softmax)
-        p = (1-logit_prob)**self.gamma
+        p = (1-logit_prob)**self.gamma*log_softmax
         '''compute negative log loss b/w target and reweighted weights'''
         loss = F.nll_loss(
-            p*log_softmax,
+            p,
             target,
             weight=self.weight,
         )

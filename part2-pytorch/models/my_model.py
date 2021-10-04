@@ -30,6 +30,33 @@ class MyModel(nn.Module):
         #############################################################################
         # TODO: Initialize the network weights                                      #
         #############################################################################
+        '''
+            Gradually increase convolution window (*2)
+            Gradually lower the linear layers to finally match output class (10)
+        '''
+        convolutional_kwargs = {'kernel_size': 2, 'padding':1}
+        self.network = nn.Sequential(
+            nn.Conv2d(3, 16,**convolutional_kwargs ),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, **convolutional_kwargs),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(32, 64,**convolutional_kwargs),
+            nn.ReLU(),
+            nn.Conv2d(64, 128,**convolutional_kwargs),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(128, 256,**convolutional_kwargs),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Flatten(),
+            nn.Linear(6400, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 10))
 
         #############################################################################
         #                              END OF YOUR CODE                             #
@@ -40,6 +67,7 @@ class MyModel(nn.Module):
         #############################################################################
         # TODO: Implement forward pass of the network                               #
         #############################################################################
+        outs = self.network(x)
 
         #############################################################################
         #                              END OF YOUR CODE                             #

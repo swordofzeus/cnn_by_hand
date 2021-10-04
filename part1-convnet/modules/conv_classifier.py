@@ -95,13 +95,14 @@ class ConvNet:
         # TODO:                                                                     #
         #    1) Implement backward pass of the model                                #
         #############################################################################
-        for index,module in enumerate(reversed(self.modules)):
-            dout = None
+        dout = None
+        reversed_modules = list(reversed(self.modules))
+        for index,module in enumerate(reversed_modules):
             if(index == 0):
                 self.criterion.backward()
                 dout = self.criterion.dx
             else:
-                dout = module[index+1].dx
+                dout = reversed_modules[index-1].dx
             module.backward(dout)
 
 
