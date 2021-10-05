@@ -37,26 +37,21 @@ class MyModel(nn.Module):
         convolutional_kwargs = {'kernel_size': 2, 'padding':1}
         self.network = nn.Sequential(
             nn.Conv2d(3, 16,**convolutional_kwargs ),
-            nn.ReLU(),
             nn.Conv2d(16, 32, **convolutional_kwargs),
-            nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(32, 64,**convolutional_kwargs),
-            nn.ReLU(),
             nn.Conv2d(64, 128,**convolutional_kwargs),
-            nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(128, 256,**convolutional_kwargs),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Flatten(),
             nn.Linear(6400, 1024),
-            nn.ReLU(),
             nn.Linear(1024, 512),
-            nn.ReLU(),
             nn.Linear(512, 256),
+            nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(256, 10))
+            nn.Linear(128, 10))
 
         #############################################################################
         #                              END OF YOUR CODE                             #

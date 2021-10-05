@@ -14,7 +14,7 @@ network:
 data:
   imbalance: imbalance # regular or imbalance
   reweight: True
-  beta: 0.9999
+  beta: 0.99
 
 loss:
   loss_type: Focal # CE or Focal

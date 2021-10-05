@@ -37,13 +37,12 @@ def reweight(cls_num_list, beta=0.9999):
     #############################################################################
     # TODO: reweight each class by effective numbers                            #
     #############################################################################
-    #fprmula: (1 − β)/(1 − βni )
+    # fprmula: (1 − β)/(1 − βni )
+
     def compute_effective_number_samples(x):
         return (1-beta)/(1-beta**x)
-    per_cls_weights = list(map(compute_effective_number_samples,cls_num_list ))
+    per_cls_weights = list(map(compute_effective_number_samples, cls_num_list))
     per_cls_weights = torch.FloatTensor(per_cls_weights)
-
-
 
     #############################################################################
     #                              END OF YOUR CODE                             #
@@ -69,10 +68,15 @@ class FocalLoss(nn.Module):
         #############################################################################
         # TODO: Implement forward pass of the focal loss                            #
         #############################################################################
+        '''formula = -(1-pt)^gamma * log(p)'''
+        '''compute rightmost log(p) term'''
         log_softmax = F.log_softmax(input, dim=-1)
+        '''get just softmax p'''
         logit_prob = torch.exp(log_softmax)
         p = (1-logit_prob)**self.gamma*log_softmax
-        '''compute negative log loss b/w target and reweighted weights'''
+        '''compute -log(p) part b/w target and reweighted weights
+          used example reference in pytorch documentation: https://pytorch.org/docs/stable/generated/torch.nn.NLLLoss.html
+          as well as reference https://datascience.stackexchange.com/questions/13828/what-does-negative-log-likelihood-mean'''
         loss = F.nll_loss(
             p,
             target,
